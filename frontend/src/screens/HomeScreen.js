@@ -6,8 +6,8 @@ import Product from '../components/Product';
 import { Helmet } from 'react-helmet-async';
 import LoadingBox from '../components/LoadingBox';
 import MessageBox from '../components/MessageBox';
-// import data from '../data';
 
+// Reducer function to manage state changes
 const reducer = (state, action) => {
   switch (action.type) {
     case 'FETCH_REQUEST':
@@ -27,8 +27,9 @@ function HomeScreen() {
     loading: true,
     error: '',
   });
-  // const [products, setProducts] = useState([]);
+
   useEffect(() => {
+    // Function to fetch products data from API
     const fetchData = async () => {
       dispatch({ type: 'FETCH_REQUEST' });
       try {
@@ -37,11 +38,10 @@ function HomeScreen() {
       } catch (err) {
         dispatch({ type: 'FETCH_FAIL', payload: err.message });
       }
-
-      // setProducts(result.data);
     };
     fetchData();
   }, []);
+
   return (
     <div>
       <Helmet>
