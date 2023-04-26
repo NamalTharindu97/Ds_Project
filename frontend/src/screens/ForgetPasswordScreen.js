@@ -18,6 +18,7 @@ export default function ForgetPasswordScreen() {
   const { userInfo } = state;
 
   useEffect(() => {
+    // redirect to home if user is already logged in
     if (userInfo) {
       navigate('/');
     }
@@ -26,14 +27,17 @@ export default function ForgetPasswordScreen() {
   const submitHandler = async (e) => {
     e.preventDefault();
     try {
+      // send email to reset password
       const { data } = await Axios.post(
         'http://localhost:5002/api/users/forget-password',
         {
           email,
         }
       );
+      // show success message
       toast.success(data.message);
     } catch (err) {
+      // show error message
       toast.error(getError(err));
     }
   };
