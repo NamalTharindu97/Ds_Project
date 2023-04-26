@@ -9,6 +9,7 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Card from 'react-bootstrap/Card';
 
+// defining reducer function to manage state changes
 const reducer = (state, action) => {
   switch (action.type) {
     case 'FETCH_REQUEST':
@@ -25,14 +26,20 @@ const reducer = (state, action) => {
       return state;
   }
 };
+
+// DashboardScreen component
 export default function DashboardScreen() {
+  // initialize state with reducer function
   const [{ loading, summary, error }, dispatch] = useReducer(reducer, {
     loading: true,
     error: '',
   });
+
+  // retrieve user info from global state
   const { state } = useContext(Store);
   const { userInfo } = state;
 
+  // fetch order summary data when component mounts
   useEffect(() => {
     const fetchData = async () => {
       try {
