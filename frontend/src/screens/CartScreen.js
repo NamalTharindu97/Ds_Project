@@ -10,33 +10,43 @@ import Card from 'react-bootstrap/Card';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
+// Defining the CartScreen function
 export default function CartScreen() {
+  // Initializing necessary states and dispatch functions
   const navigate = useNavigate();
   const { state, dispatch: ctxDispatch } = useContext(Store);
   const {
     cart: { cartItems },
   } = state;
 
+  // Function to update cart with new quantity of items
   const updateCartHandler = async (item, quantity) => {
+    // Getting data for a specific product using its ID
     const { data } = await axios.get(
       `http://localhost:5001/api/products/${item._id}`
     );
+    // Checking if the requested quantity is available in the stock
     if (data.countInStock < quantity) {
       window.alert('Sorry. Product is out of stock');
       return;
     }
+    // Dispatching action to add item with updated quantity in the cart
     ctxDispatch({
       type: 'CART_ADD_ITEM',
       payload: { ...item, quantity },
     });
   };
+
+  // Function to remove an item from the cart
   const removeItemHandler = (item) => {
     ctxDispatch({ type: 'CART_REMOVE_ITEM', payload: item });
   };
 
+  // Function to handle checkout process
   const checkoutHandler = () => {
     navigate('/signin?redirect=/shipping');
   };
+  // Return statement for the CartScreen function
 
   return (
     <div>
