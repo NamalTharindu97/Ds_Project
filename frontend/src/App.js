@@ -38,32 +38,46 @@ import ForgetPasswordScreen from './screens/ForgetPasswordScreen';
 import ResetPasswordScreen from './screens/ResetPasswordScreen';
 
 function App() {
+  // Get state and dispatch function from Store context
   const { state, dispatch: ctxDispatch } = useContext(Store);
+  // Destructure variables from state
   const { fullBox, cart, userInfo } = state;
 
+  // Function to handle sign out
   const signoutHandler = () => {
+    // Dispatch action to sign out user
     ctxDispatch({ type: 'USER_SIGNOUT' });
+    // Remove user information from local storage
     localStorage.removeItem('userInfo');
     localStorage.removeItem('shippingAddress');
     localStorage.removeItem('paymentMethod');
+    // Redirect user to sign in page
     window.location.href = '/signin';
   };
+  // State variable to control sidebar visibility
   const [sidebarIsOpen, setSidebarIsOpen] = useState(false);
+  // State variable to store categories fetched from API
   const [categories, setCategories] = useState([]);
 
+  // Effect hook to fetch categories from API when component mounts
   useEffect(() => {
     const fetchCategories = async () => {
       try {
+        // Send GET request to API to fetch categories
         const { data } = await axios.get(
           `http://localhost:4000/api/products/categories`
         );
+        // Update categories state with fetched data
         setCategories(data);
       } catch (err) {
+        // Display error toast if there's an error fetching categories
         toast.error(getError(err));
       }
     };
+    // Call fetchCategories function
     fetchCategories();
-  }, []);
+  }, []); // Empty array passed as second argument to only run effect on mount
+
   return (
     <BrowserRouter>
       <div
