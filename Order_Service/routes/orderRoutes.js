@@ -6,7 +6,7 @@ import Product from '../models/productModel.js';
 import { isAuth, isAdmin, mailgun, payOrderEmailTemplate } from '../utils.js';
 
 const orderRouter = express.Router();
-
+// Get all orders (admin)
 orderRouter.get(
   '/',
   isAuth,
@@ -16,11 +16,12 @@ orderRouter.get(
     res.send(orders);
   })
 );
-
+// Create new order
 orderRouter.post(
   '/',
   isAuth,
   expressAsyncHandler(async (req, res) => {
+    // Create a new order object
     const newOrder = new Order({
       orderItems: req.body.orderItems.map((x) => ({ ...x, product: x._id })),
       shippingAddress: req.body.shippingAddress,
@@ -31,17 +32,18 @@ orderRouter.post(
       totalPrice: req.body.totalPrice,
       user: req.user._id,
     });
-
+    // Save the new order to the database
     const order = await newOrder.save();
     res.status(201).send({ message: 'New Order Created', order });
   })
 );
-
+// Get order summary (admin)
 orderRouter.get(
   '/summary',
   isAuth,
   isAdmin,
   expressAsyncHandler(async (req, res) => {
+    // Get number of orders and total sales
     const orders = await Order.aggregate([
       {
         $group: {
@@ -51,6 +53,7 @@ orderRouter.get(
         },
       },
     ]);
+    // Get number of users
     const users = await User.aggregate([
       {
         $group: {
@@ -59,6 +62,7 @@ orderRouter.get(
         },
       },
     ]);
+    // Get daily orders and sales
     const dailyOrders = await Order.aggregate([
       {
         $group: {
@@ -69,6 +73,7 @@ orderRouter.get(
       },
       { $sort: { _id: 1 } },
     ]);
+    // Get product categories and count
     const productCategories = await Product.aggregate([
       {
         $group: {
@@ -80,7 +85,7 @@ orderRouter.get(
     res.send({ users, orders, dailyOrders, productCategories });
   })
 );
-
+// Get user's orders
 orderRouter.get(
   '/mine',
   isAuth,
@@ -89,7 +94,7 @@ orderRouter.get(
     res.send(orders);
   })
 );
-
+// Get order by ID
 orderRouter.get(
   '/:id',
   isAuth,
@@ -102,10 +107,10 @@ orderRouter.get(
     }
   })
 );
-
+// Mark order as delivered
 orderRouter.put(
   '/:id/deliver',
-  isAuth,
+  isAuth, // Authenticate user
   expressAsyncHandler(async (req, res) => {
     const order = await Order.findById(req.params.id);
     if (order) {
@@ -118,7 +123,7 @@ orderRouter.put(
     }
   })
 );
-
+// Mark order as paid
 orderRouter.put(
   '/:id/pay',
   isAuth,
@@ -136,8 +141,9 @@ orderRouter.put(
         update_time: req.body.update_time,
         email_address: req.body.email_address,
       };
-
+      // Save the updated order
       const updatedOrder = await order.save();
+      // Send order confirmation email using Mailgun API
       mailgun()
         .messages()
         .send(
@@ -162,11 +168,11 @@ orderRouter.put(
     }
   })
 );
-
+// Delete an order
 orderRouter.delete(
   '/:id',
-  isAuth,
-  isAdmin,
+  isAuth, // Authenticate user
+  isAdmin, // Check if the user is admin
   expressAsyncHandler(async (req, res) => {
     const order = await Order.findById(req.params.id);
     if (order) {
