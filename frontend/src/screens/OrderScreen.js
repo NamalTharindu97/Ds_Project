@@ -48,14 +48,17 @@ function reducer(state, action) {
       return state;
   }
 }
+// Component for displaying an individual order
 export default function OrderScreen() {
   const { state } = useContext(Store);
   const { userInfo } = state;
 
+  // Extract the order ID from the URL parameters
   const params = useParams();
   const { id: orderId } = params;
   const navigate = useNavigate();
 
+  // Use reducer to manage state
   const [
     {
       loading,
@@ -75,8 +78,10 @@ export default function OrderScreen() {
     loadingPay: false,
   });
 
+  // Use PayPal button and PayPal API to handle payment
   const [{ isPending }, paypalDispatch] = usePayPalScriptReducer();
 
+  // Function to create PayPal order
   function createOrder(data, actions) {
     return actions.order
       .create({
@@ -91,10 +96,14 @@ export default function OrderScreen() {
       });
   }
 
+  // Function to handle successful PayPal payment capture
   function onApprove(data, actions) {
     return actions.order.capture().then(async function (details) {
       try {
+        // Dispatch a 'PAY_REQUEST' action to update the state to show that the payment is being processed
         dispatch({ type: 'PAY_REQUEST' });
+
+        // Make a PUT request to the API to update the order status and payment details
         const { data } = await axios.put(
           `http://localhost:5000/api/orders/${order._id}/pay`,
           details,
@@ -102,37 +111,57 @@ export default function OrderScreen() {
             headers: { authorization: `Bearer ${userInfo.token}` },
           }
         );
+
+        // Dispatch a 'PAY_SUCCESS' action to update the state with the newly updated order data
         dispatch({ type: 'PAY_SUCCESS', payload: data });
+
+        // Show a success message using the 'toast' library
         toast.success('Order is paid');
       } catch (err) {
+        // If there is an error during payment, dispatch a 'PAY_FAIL' action to update the state with the error message
         dispatch({ type: 'PAY_FAIL', payload: getError(err) });
+        // Show an error message using the 'toast' library
         toast.error(getError(err));
       }
     });
   }
+
+  // Function to handle PayPal payment errors
   function onError(err) {
+    // Show an error message using the 'toast' library
     toast.error(getError(err));
   }
 
+  // UseEffect hook to fetch order data from the API when the component is mounted or certain dependencies change
   useEffect(() => {
+    // Async function to fetch the order data from the API
     const fetchOrder = async () => {
       try {
+        // Dispatch a 'FETCH_REQUEST' action to update the state to show that the order is being fetched
         dispatch({ type: 'FETCH_REQUEST' });
+
+        // Make a GET request to the API to fetch the order data
         const { data } = await axios.get(
           `http://localhost:5000/api/orders/${orderId}`,
           {
             headers: { authorization: `Bearer ${userInfo.token}` },
           }
         );
+
+        // Dispatch a 'FETCH_SUCCESS' action to update the state with the fetched order data
         dispatch({ type: 'FETCH_SUCCESS', payload: data });
       } catch (err) {
+        // If there is an error fetching the order, dispatch a 'FETCH_FAIL' action to update the state with the error message
         dispatch({ type: 'FETCH_FAIL', payload: getError(err) });
       }
     };
 
+    // Check if the user is authenticated, and redirect to the login page if they are not
     if (!userInfo) {
       return navigate('/login');
     }
+
+    // Check if the order ID in the URL matches the order ID in the state, and if not, fetch the order data
     if (
       !order._id ||
       successPay ||
@@ -147,6 +176,7 @@ export default function OrderScreen() {
         dispatch({ type: 'DELIVER_RESET' });
       }
     } else {
+      // If the order data is already in the state, load the PayPal script and set the PayPal options
       const loadPaypalScript = async () => {
         const { data: clientId } = await axios.get(
           'http://localhost:4000/api/keys/paypal',
