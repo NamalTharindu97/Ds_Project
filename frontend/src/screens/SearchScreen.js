@@ -72,9 +72,13 @@ export const ratings = [
 ];
 
 export default function SearchScreen() {
+  // Import hooks from React Router
   const navigate = useNavigate();
   const { search } = useLocation();
+  // Parse the search string
   const sp = new URLSearchParams(search); // /search?category=Shirts
+
+  // Get values from the parsed search string or default to 'all'
   const category = sp.get('category') || 'all';
   const query = sp.get('query') || 'all';
   const price = sp.get('price') || 'all';
@@ -82,12 +86,14 @@ export default function SearchScreen() {
   const order = sp.get('order') || 'newest';
   const page = sp.get('page') || 1;
 
+  // Use a reducer to manage state
   const [{ loading, error, products, pages, countProducts }, dispatch] =
     useReducer(reducer, {
       loading: true,
       error: '',
     });
 
+  // Fetch products using the search criteria
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -105,6 +111,7 @@ export default function SearchScreen() {
     fetchData();
   }, [category, error, order, page, price, query, rating]);
 
+  // Fetch product categories
   const [categories, setCategories] = useState([]);
   useEffect(() => {
     const fetchCategories = async () => {
@@ -120,6 +127,7 @@ export default function SearchScreen() {
     fetchCategories();
   }, [dispatch]);
 
+  // Construct filter URL based on current state
   const getFilterUrl = (filter, skipPathname) => {
     const filterPage = filter.page || page;
     const filterCategory = filter.category || category;

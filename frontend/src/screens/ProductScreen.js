@@ -37,8 +37,9 @@ const reducer = (state, action) => {
       return state;
   }
 };
-
+// Define a function component named ProductScreen
 function ProductScreen() {
+  // Initialize a reference to reviews
   let reviewsRef = useRef();
 
   const [rating, setRating] = useState(0);
@@ -55,6 +56,7 @@ function ProductScreen() {
       loading: true,
       error: '',
     });
+  // Fetch the product details from the backend when the component mounts
   useEffect(() => {
     const fetchData = async () => {
       dispatch({ type: 'FETCH_REQUEST' });
@@ -69,9 +71,11 @@ function ProductScreen() {
     };
     fetchData();
   }, [slug]);
-
+  // Access the cart and user information from the global state
   const { state, dispatch: ctxDispatch } = useContext(Store);
   const { cart, userInfo } = state;
+
+  // Add the product to the cart
   const addToCartHandler = async () => {
     const existItem = cart.cartItems.find((x) => x._id === product._id);
     const quantity = existItem ? existItem.quantity + 1 : 1;
@@ -89,6 +93,7 @@ function ProductScreen() {
     navigate('/cart');
   };
 
+  // Submit the review for the product
   const submitHandler = async (e) => {
     e.preventDefault();
     if (!comment || !rating) {
