@@ -33,8 +33,9 @@ export default function ProfileScreen() {
     loadingUpdate: false,
   });
 
+  // Submit handler function
   const submitHandler = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevents default form submission behavior
     try {
       const { data } = await axios.put(
         'http://localhost:5002/api/users/profile',
@@ -47,17 +48,20 @@ export default function ProfileScreen() {
           headers: { Authorization: `Bearer ${userInfo.token}` },
         }
       );
+      // Dispatches action type to update user's profile successfully
       dispatch({
         type: 'UPDATE_SUCCESS',
       });
+      // Dispatches action type to sign in user with updated profile data
       ctxDispatch({ type: 'USER_SIGNIN', payload: data });
-      localStorage.setItem('userInfo', JSON.stringify(data));
-      toast.success('User updated successfully');
+      localStorage.setItem('userInfo', JSON.stringify(data)); // Saves updated user info to local storage
+      toast.success('User updated successfully'); // Shows success message using Toastify
     } catch (err) {
+      // Dispatches action type to handle fetch failure
       dispatch({
         type: 'FETCH_FAIL',
       });
-      toast.error(getError(err));
+      toast.error(getError(err)); // Shows error message using Toastify
     }
   };
 

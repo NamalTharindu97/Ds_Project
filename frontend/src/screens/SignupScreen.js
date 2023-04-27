@@ -12,23 +12,30 @@ import { getError } from '../utils';
 export default function SignupScreen() {
   const navigate = useNavigate();
   const { search } = useLocation();
+  // get the "redirect" parameter from the URL query string, if it exists
   const redirectInUrl = new URLSearchParams(search).get('redirect');
+  // set the redirect path to the "redirect" parameter value or the root path
   const redirect = redirectInUrl ? redirectInUrl : '/';
 
+  // define state variables for the form input fields
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
+  // get the user info from the global state
   const { state, dispatch: ctxDispatch } = useContext(Store);
   const { userInfo } = state;
+  // handle the form submission
   const submitHandler = async (e) => {
     e.preventDefault();
+    // check if the password and confirm password fields match
     if (password !== confirmPassword) {
       toast.error('Passwords do not match');
       return;
     }
     try {
+      // send a POST request to the server to create a new user account
       const { data } = await Axios.post(
         'http://localhost:5002/api/users/signup',
         {
@@ -37,14 +44,17 @@ export default function SignupScreen() {
           password,
         }
       );
+      // update the global state with the user info and save it to local storage
       ctxDispatch({ type: 'USER_SIGNIN', payload: data });
       localStorage.setItem('userInfo', JSON.stringify(data));
+      // navigate to the redirect path
       navigate(redirect || '/');
     } catch (err) {
+      // display an error message if the server returns an error
       toast.error(getError(err));
     }
   };
-
+  // redirect to the home page if the user is already signed in
   useEffect(() => {
     if (userInfo) {
       navigate(redirect);
