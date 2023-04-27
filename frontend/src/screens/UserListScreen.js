@@ -38,6 +38,7 @@ const reducer = (state, action) => {
   }
 };
 export default function UserListScreen() {
+  // Hooks
   const navigate = useNavigate();
   const [{ loading, error, users, loadingDelete, successDelete }, dispatch] =
     useReducer(reducer, {
@@ -47,40 +48,48 @@ export default function UserListScreen() {
 
   const { state } = useContext(Store);
   const { userInfo } = state;
-
+  // Fetch data on mount and on successDelete
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Dispatch FETCH_REQUEST action
         dispatch({ type: 'FETCH_REQUEST' });
         const { data } = await axios.get(`http://localhost:5002/api/users`, {
           headers: { Authorization: `Bearer ${userInfo.token}` },
         });
+        // Dispatch FETCH_SUCCESS action with data payload
         dispatch({ type: 'FETCH_SUCCESS', payload: data });
       } catch (err) {
+        // Dispatch FETCH_FAIL action with error payload
         dispatch({
           type: 'FETCH_FAIL',
           payload: getError(err),
         });
       }
     };
+    // If successDelete is true, dispatch DELETE_RESET action.
+    // Otherwise, fetch data.
     if (successDelete) {
       dispatch({ type: 'DELETE_RESET' });
     } else {
       fetchData();
     }
   }, [userInfo, successDelete]);
-
+  // Delete a user
   const deleteHandler = async (user) => {
     if (window.confirm('Are you sure to delete?')) {
       try {
+        // Dispatch DELETE_REQUEST action
         dispatch({ type: 'DELETE_REQUEST' });
         await axios.delete(`http://localhost:5002/api/users/${user._id}`, {
           headers: { Authorization: `Bearer ${userInfo.token}` },
         });
         toast.success('user deleted successfully');
+        // Dispatch DELETE_SUCCESS action
         dispatch({ type: 'DELETE_SUCCESS' });
       } catch (error) {
         toast.error(getError(error));
+        // Dispatch DELETE_FAIL action
         dispatch({
           type: 'DELETE_FAIL',
         });
