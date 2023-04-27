@@ -29,27 +29,32 @@ const reducer = (state, action) => {
       return state;
   }
 };
-
+// Define the UserEditScreen component
 export default function UserEditScreen() {
+  // Declare state variables and initialize them with useReducer
   const [{ loading, error, loadingUpdate }, dispatch] = useReducer(reducer, {
     loading: true,
     error: '',
   });
-
+  // Get the user info from the context
   const { state } = useContext(Store);
   const { userInfo } = state;
 
+  // Get the user ID from the URL parameter and set up the navigate hook
   const params = useParams();
   const { id: userId } = params;
   const navigate = useNavigate();
 
+  // Declare and initialize state variables with useState
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // Fetch the user data from the API when the component mounts
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Set the loading state to true
         dispatch({ type: 'FETCH_REQUEST' });
         const { data } = await axios.get(
           `http://localhost:5002/api/users/${userId}`,
@@ -57,11 +62,13 @@ export default function UserEditScreen() {
             headers: { Authorization: `Bearer ${userInfo.token}` },
           }
         );
+        // Set the state variables with the user data from the API
         setName(data.name);
         setEmail(data.email);
         setIsAdmin(data.isAdmin);
         dispatch({ type: 'FETCH_SUCCESS' });
       } catch (err) {
+        // Set the error state with the error message
         dispatch({
           type: 'FETCH_FAIL',
           payload: getError(err),
@@ -70,10 +77,11 @@ export default function UserEditScreen() {
     };
     fetchData();
   }, [userId, userInfo]);
-
+  // Update the user data with the API when the form is submitted
   const submitHandler = async (e) => {
     e.preventDefault();
     try {
+      // Set the loading state to true
       dispatch({ type: 'UPDATE_REQUEST' });
       await axios.put(
         `http://localhost:5002/api/users/${userId}`,
@@ -82,12 +90,15 @@ export default function UserEditScreen() {
           headers: { Authorization: `Bearer ${userInfo.token}` },
         }
       );
+      // Set the success state
       dispatch({
         type: 'UPDATE_SUCCESS',
       });
+      // Show a success message and navigate to the users page
       toast.success('User updated successfully');
       navigate('/admin/users');
     } catch (error) {
+      // Show an error message and set the fail state
       toast.error(getError(error));
       dispatch({ type: 'UPDATE_FAIL' });
     }
