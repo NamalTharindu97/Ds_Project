@@ -13,6 +13,7 @@ import { Store } from '../Store';
 import CheckoutSteps from '../components/CheckoutSteps';
 import LoadingBox from '../components/LoadingBox';
 
+// Define the reducer function to manage state changes
 const reducer = (state, action) => {
   switch (action.type) {
     case 'CREATE_REQUEST':
@@ -29,13 +30,16 @@ const reducer = (state, action) => {
 export default function PlaceOrderScreen() {
   const navigate = useNavigate();
 
+  // Use the reducer to manage loading state
   const [{ loading }, dispatch] = useReducer(reducer, {
     loading: false,
   });
 
+  // Get the cart and user info from the global Store context
   const { state, dispatch: ctxDispatch } = useContext(Store);
   const { cart, userInfo } = state;
 
+  // Calculate the cart prices
   const round2 = (num) => Math.round(num * 100 + Number.EPSILON) / 100; // 123.2345 => 123.23
   cart.itemsPrice = round2(
     cart.cartItems.reduce((a, c) => a + c.quantity * c.price, 0)
@@ -44,10 +48,12 @@ export default function PlaceOrderScreen() {
   cart.taxPrice = round2(0.15 * cart.itemsPrice);
   cart.totalPrice = cart.itemsPrice + cart.shippingPrice + cart.taxPrice;
 
+  // Handle the place order button click event
   const placeOrderHandler = async () => {
     try {
       dispatch({ type: 'CREATE_REQUEST' });
 
+      // Make a POST request to create a new order
       const { data } = await Axios.post(
         'http://localhost:5000/api/orders',
         {
@@ -65,16 +71,22 @@ export default function PlaceOrderScreen() {
           },
         }
       );
+
+      // Clear the cart and loading state
       ctxDispatch({ type: 'CART_CLEAR' });
       dispatch({ type: 'CREATE_SUCCESS' });
+
+      // Remove the cart items from local storage and navigate to the order details page
       localStorage.removeItem('cartItems');
       navigate(`/order/${data.order._id}`);
     } catch (err) {
+      // Handle errors by setting the loading state and showing an error toast
       dispatch({ type: 'CREATE_FAIL' });
       toast.error(getError(err));
     }
   };
 
+  // Redirect to the payment page if no payment method is selected
   useEffect(() => {
     if (!cart.paymentMethod) {
       navigate('/payment');
