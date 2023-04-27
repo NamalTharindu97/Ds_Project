@@ -1,3 +1,4 @@
+// Importing necessary modules
 import express from 'express';
 import path from 'path';
 import mongoose from 'mongoose';
@@ -8,10 +9,10 @@ import orderRouter from './routes/orderRoutes.js';
 import uploadRouter from './routes/uploadRoutes.js';
 import cors from 'cors';
 
-dotenv.config();
+dotenv.config(); // Load environment variables from .env file
 
 mongoose
-  .connect(process.env.MONGODB_URI)
+  .connect(process.env.MONGODB_URI) // Connect to MongoDB database
   .then(() => {
     console.log('connected to db');
   })
@@ -19,30 +20,42 @@ mongoose
     console.log(err.message);
   });
 
-const app = express();
+const app = express(); // Create express application
 
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(cors()); // Enable Cross-Origin Resource Sharing
+app.use(express.json()); // Parse incoming JSON data
+app.use(express.urlencoded({ extended: true })); // Parse incoming form data
 
+// Endpoint to get PayPal client ID
 app.get('/api/keys/paypal', (req, res) => {
   res.send(process.env.PAYPAL_CLIENT_ID || 'sb');
 });
+
+// Endpoint to get Google API key
 app.get('/api/keys/google', (req, res) => {
   res.send({ key: process.env.GOOGLE_API_KEY || '' });
 });
 
+// Routes for handling file uploads
 app.use('/api/upload', uploadRouter);
+
+// Routes for handling product-related operations
 app.use('/api/products', productRouter);
+
+// Routes for handling user-related operations
 app.use('/api/users', userRouter);
+
+// Routes for handling order-related operations
 app.use('/api/orders', orderRouter);
 
+// Serve frontend build files
 const __dirname = path.resolve();
 app.use(express.static(path.join(__dirname, '/frontend/build')));
 app.get('*', (req, res) =>
   res.sendFile(path.join(__dirname, '/frontend/build/index.html'))
 );
 
+// Error handler middleware
 app.use((err, req, res, next) => {
   res.status(500).send({ message: err.message });
 });

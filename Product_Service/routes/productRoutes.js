@@ -1,20 +1,23 @@
+// Import necessary dependencies
 import express from 'express';
 import expressAsyncHandler from 'express-async-handler';
 import Product from '../models/productModel.js';
 import { isAuth, isAdmin } from '../utils.js';
 
+// Create an instance of express router
 const productRouter = express.Router();
-
+// Route to get all products
 productRouter.get('/', async (req, res) => {
   const products = await Product.find();
   res.send(products);
 });
-
+// Route to create a new product
 productRouter.post(
   '/',
   isAuth,
   isAdmin,
   expressAsyncHandler(async (req, res) => {
+    // Create a new product object with sample data
     const newProduct = new Product({
       name: 'sample name ' + Date.now(),
       slug: 'sample-name-' + Date.now(),
@@ -27,18 +30,21 @@ productRouter.post(
       numReviews: 0,
       description: 'sample description',
     });
+    // Save the new product to the database
     const product = await newProduct.save();
     res.send({ message: 'Product Created', product });
   })
 );
-
+// Route to update a product by ID
 productRouter.put(
   '/:id',
   isAuth,
   isAdmin,
   expressAsyncHandler(async (req, res) => {
     const productId = req.params.id;
+    // Find the product in the database by ID
     const product = await Product.findById(productId);
+    // Update the product with the request body data
     if (product) {
       product.name = req.body.name;
       product.slug = req.body.slug;
@@ -56,14 +62,16 @@ productRouter.put(
     }
   })
 );
-
+// Route to delete a product by ID
 productRouter.delete(
   '/:id',
   isAuth,
   isAdmin,
   expressAsyncHandler(async (req, res) => {
+    // Find the product in the database by ID
     const product = await Product.findById(req.params.id);
     if (product) {
+      // Remove the product from the database
       await product.remove();
       res.send({ message: 'Product Deleted' });
     } else {
@@ -71,31 +79,37 @@ productRouter.delete(
     }
   })
 );
-
+// Route to add a review for a product
 productRouter.post(
   '/:id/reviews',
   isAuth,
   expressAsyncHandler(async (req, res) => {
     const productId = req.params.id;
+    // Find the product in the database by ID
     const product = await Product.findById(productId);
+
     if (product) {
+      // Check if the user has already submitted a review for this product
       if (product.reviews.find((x) => x.name === req.user.name)) {
         return res
           .status(400)
           .send({ message: 'You already submitted a review' });
       }
-
+      // Create a new review object with the request body data
       const review = {
         name: req.user.name,
         rating: Number(req.body.rating),
         comment: req.body.comment,
       };
+      // Add the new review to the product's review array
       product.reviews.push(review);
       product.numReviews = product.reviews.length;
       product.rating =
         product.reviews.reduce((a, c) => c.rating + a, 0) /
         product.reviews.length;
+      // Save the updated product to the database
       const updatedProduct = await product.save();
+      // Send a response with the updated product and the newly added review
       res.status(201).send({
         message: 'Review Created',
         review: updatedProduct.reviews[updatedProduct.reviews.length - 1],
