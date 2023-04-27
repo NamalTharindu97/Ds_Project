@@ -9,7 +9,9 @@ import { Store } from '../Store';
 import { toast } from 'react-toastify';
 import { getError } from '../utils';
 
+// Create a SigninScreen component
 export default function SigninScreen() {
+  // Initialize hooks and states
   const navigate = useNavigate();
   const { search } = useLocation();
   const redirectInUrl = new URLSearchParams(search).get('redirect');
@@ -20,6 +22,7 @@ export default function SigninScreen() {
 
   const { state, dispatch: ctxDispatch } = useContext(Store);
   const { userInfo } = state;
+  // Define the submitHandler function to handle form submission
   const submitHandler = async (e) => {
     e.preventDefault();
     try {
@@ -37,13 +40,13 @@ export default function SigninScreen() {
       toast.error(getError(err));
     }
   };
-
+  // Check if user is already signed in, then redirect to redirect URL
   useEffect(() => {
     if (userInfo) {
       navigate(redirect);
     }
   }, [navigate, redirect, userInfo]);
-
+  // Return the component JSX
   return (
     <Container className="small-container">
       <Helmet>
