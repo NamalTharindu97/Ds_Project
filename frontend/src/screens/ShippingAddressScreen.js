@@ -6,29 +6,36 @@ import { useNavigate } from 'react-router-dom';
 import { Store } from '../Store';
 import CheckoutSteps from '../components/CheckoutSteps';
 
+// Shipping address screen component
 export default function ShippingAddressScreen() {
   const navigate = useNavigate();
+  // Get state and dispatch from the global store context
   const { state, dispatch: ctxDispatch } = useContext(Store);
   const {
     fullBox,
     userInfo,
     cart: { shippingAddress },
   } = state;
+  // State variables for the form inputs
   const [fullName, setFullName] = useState(shippingAddress.fullName || '');
   const [address, setAddress] = useState(shippingAddress.address || '');
   const [city, setCity] = useState(shippingAddress.city || '');
   const [postalCode, setPostalCode] = useState(
     shippingAddress.postalCode || ''
   );
+  // Check if user is logged in, else redirect to sign in page
   useEffect(() => {
     if (!userInfo) {
       navigate('/signin?redirect=/shipping');
     }
   }, [userInfo, navigate]);
   const [country, setCountry] = useState(shippingAddress.country || '');
+  // Form submit handler
   const submitHandler = (e) => {
+    // Dispatch the action to save shipping address to the store
     e.preventDefault();
     ctxDispatch({
+      // Store the shipping address in localStorage
       type: 'SAVE_SHIPPING_ADDRESS',
       payload: {
         fullName,
@@ -50,13 +57,16 @@ export default function ShippingAddressScreen() {
         location: shippingAddress.location,
       })
     );
+    // Navigate to the payment screen
     navigate('/payment');
   };
 
+  // Dispatch action to set full box off on load
   useEffect(() => {
     ctxDispatch({ type: 'SET_FULLBOX_OFF' });
   }, [ctxDispatch, fullBox]);
 
+  // The component JSX
   return (
     <div>
       <Helmet>
