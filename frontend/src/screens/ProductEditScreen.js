@@ -41,19 +41,23 @@ const reducer = (state, action) => {
       return state;
   }
 };
+
 export default function ProductEditScreen() {
   const navigate = useNavigate();
-  const params = useParams(); // /product/:id
+  const params = useParams(); // get the product id from the URL params
   const { id: productId } = params;
 
-  const { state } = useContext(Store);
+  const { state } = useContext(Store); // get global state and userInfo from it
   const { userInfo } = state;
+
+  // define a reducer to manage the loading and error states
   const [{ loading, error, loadingUpdate, loadingUpload }, dispatch] =
     useReducer(reducer, {
       loading: true,
       error: '',
     });
 
+  // define local state for each field of the product object
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [price, setPrice] = useState('');
@@ -64,14 +68,15 @@ export default function ProductEditScreen() {
   const [brand, setBrand] = useState('');
   const [description, setDescription] = useState('');
 
+  // fetch the product data from the server and update the local state
   useEffect(() => {
     const fetchData = async () => {
       try {
-        dispatch({ type: 'FETCH_REQUEST' });
+        dispatch({ type: 'FETCH_REQUEST' }); // dispatch a request action
         const { data } = await axios.get(
           `http://localhost:5001/api/products/${productId}`
-        );
-        setName(data.name);
+        ); // make a request to the server to get the product data
+        setName(data.name); // update the local state with the product data
         setSlug(data.slug);
         setPrice(data.price);
         setImage(data.image);
@@ -80,20 +85,22 @@ export default function ProductEditScreen() {
         setCountInStock(data.countInStock);
         setBrand(data.brand);
         setDescription(data.description);
-        dispatch({ type: 'FETCH_SUCCESS' });
+        dispatch({ type: 'FETCH_SUCCESS' }); // dispatch a success action
       } catch (err) {
         dispatch({
-          type: 'FETCH_FAIL',
+          type: 'FETCH_FAIL', // dispatch a fail action with the error message
           payload: getError(err),
         });
       }
     };
-    fetchData();
-  }, [productId]);
+    fetchData(); // call the fetchData function to fetch the product data
+  }, [productId]); // re-run the effect whenever the productId changes
 
+  // this function handles the submission of updated product information to the server
   const submitHandler = async (e) => {
     e.preventDefault();
     try {
+      // send request to update product info
       dispatch({ type: 'UPDATE_REQUEST' });
       await axios.put(
         `http://localhost:5001/api/products/${productId}`,
@@ -113,21 +120,27 @@ export default function ProductEditScreen() {
           headers: { Authorization: `Bearer ${userInfo.token}` },
         }
       );
+      // update state to indicate successful update
       dispatch({
         type: 'UPDATE_SUCCESS',
       });
+      // show success message and redirect to product list
       toast.success('Product updated successfully');
       navigate('/admin/products');
     } catch (err) {
+      // show error message if update fails
       toast.error(getError(err));
       dispatch({ type: 'UPDATE_FAIL' });
     }
   };
+
+  // this function handles uploading of image files
   const uploadFileHandler = async (e, forImages) => {
     const file = e.target.files[0];
     const bodyFormData = new FormData();
     bodyFormData.append('file', file);
     try {
+      // send request to upload image
       dispatch({ type: 'UPLOAD_REQUEST' });
       const { data } = await axios.post(
         'http://localhost:4000/api/upload',
@@ -139,26 +152,43 @@ export default function ProductEditScreen() {
           },
         }
       );
+      // update state to indicate successful upload
       dispatch({ type: 'UPLOAD_SUCCESS' });
 
+      // if uploading for images, add image URL to images state, otherwise update image state
       if (forImages) {
         setImages([...images, data.secure_url]);
       } else {
         setImage(data.secure_url);
       }
+
+      // show success message
       toast.success('Image uploaded successfully. click Update to apply it');
     } catch (err) {
+      // show error message if upload fails
       toast.error(getError(err));
       dispatch({ type: 'UPLOAD_FAIL', payload: getError(err) });
     }
   };
+
+  // This function handles deleting a file
   const deleteFileHandler = async (fileName, f) => {
+    // Log the filename and file object for debugging purposes
     console.log(fileName, f);
+
+    // Log the current list of images for debugging purposes
     console.log(images);
+
+    // Log the list of images with the current filename removed for debugging purposes
     console.log(images.filter((x) => x !== fileName));
+
+    // Update the state of images by removing the current filename
     setImages(images.filter((x) => x !== fileName));
-    toast.success('Image removed successfully. click Update to apply it');
+
+    // Display a success message using a toast
+    toast.success('Image removed successfully. Click Update to apply it.');
   };
+
   return (
     <Container className="small-container">
       <Helmet>
